@@ -1,271 +1,718 @@
-// ── LOADER ──
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const loader = document.getElementById('loader');
-    loader.classList.add('hide');
-    setTimeout(() => loader.remove(), 700);
-  }, 2200);
-});
+// ==========================================
+// Ravindu Dilhan - Portfolio Script
+// ==========================================
 
-// ── CURSOR ──
-const cursor = document.getElementById('cursor');
-const cursorRing = document.getElementById('cursor-ring');
-let mx = 0, my = 0, rx = 0, ry = 0;
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cursor.style.left = mx + 'px';
-  cursor.style.top = my + 'px';
-});
-function animRing() {
-  rx += (mx - rx) * 0.12;
-  ry += (my - ry) * 0.12;
-  cursorRing.style.left = rx + 'px';
-  cursorRing.style.top = ry + 'px';
-  requestAnimationFrame(animRing);
+
+// ==========================================
+// HERO PARTICLE BACKGROUND
+// ==========================================
+
+const canvas = document.getElementById("hero-canvas");
+const ctx = canvas.getContext("2d");
+
+let particles = [];
+let mouse = {
+    x: null,
+    y: null
+};
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
-animRing();
-document.querySelectorAll('a,button,.btn,.skill-cube,.project-card,.social-btn').forEach(el => {
-  el.addEventListener('mouseenter', () => { cursor.style.width = '20px'; cursor.style.height = '20px'; cursorRing.style.width = '60px'; cursorRing.style.height = '60px'; });
-  el.addEventListener('mouseleave', () => { cursor.style.width = '12px'; cursor.style.height = '12px'; cursorRing.style.width = '38px'; cursorRing.style.height = '38px'; });
-});
 
-// ── SCROLL PROGRESS ──
-window.addEventListener('scroll', () => {
-  const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
-  document.getElementById('scroll-bar').style.width = scrolled + '%';
-});
+class Particle {
 
-// ── MOBILE MENU ──
-function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
-function closeMobileMenu() { document.getElementById('mobile-menu').classList.remove('open'); }
-document.getElementById('menu-close').onclick = closeMobileMenu;
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
 
-// ── TYPING EFFECT ──
-const phrases = ['Software Engineering Student', 'Future Full Stack Developer', 'Web Designer', 'Problem Solver', 'Tech Enthusiast'];
-let phraseIdx = 0, charIdx = 0, deleting = false;
-function typeWriter() {
-  const target = document.getElementById('typed-text');
-  const current = phrases[phraseIdx];
-  if (!deleting) {
-    target.textContent = current.slice(0, charIdx + 1);
-    charIdx++;
-    if (charIdx === current.length) { setTimeout(() => { deleting = true; typeWriter(); }, 1800); return; }
-  } else {
-    target.textContent = current.slice(0, charIdx - 1);
-    charIdx--;
-    if (charIdx === 0) { deleting = false; phraseIdx = (phraseIdx + 1) % phrases.length; }
-  }
-  setTimeout(typeWriter, deleting ? 45 : 90);
-}
-setTimeout(typeWriter, 2400);
+        this.size = Math.random() * 1.8 + 0.5;
 
-// ── SCROLL REVEAL ──
-const revealEls = document.querySelectorAll('.reveal');
-const revObs = new IntersectionObserver((entries) => {
-  entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); } });
-}, { threshold: 0.08 });
-revealEls.forEach(el => revObs.observe(el));
-
-// ── COUNTER ANIMATION ──
-function animateCounter(el) {
-  const target = parseInt(el.dataset.target);
-  const suffix = el.dataset.suffix || '';
-  let current = 0;
-  const step = target / 60;
-  const timer = setInterval(() => {
-    current += step;
-    if (current >= target) { current = target; clearInterval(timer); }
-    el.textContent = Math.floor(current) + suffix;
-  }, 25);
-}
-const counterObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { animateCounter(e.target); counterObs.unobserve(e.target); } });
-}, { threshold: .5 });
-document.querySelectorAll('.stat-num[data-target]').forEach(el => counterObs.observe(el));
-
-// ── 3D TILT ON PROJECT CARDS ──
-document.querySelectorAll('[data-tilt]').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.transform = `perspective(800px) rotateY(${x * 12}deg) rotateX(${-y * 12}deg) translateZ(10px)`;
-  });
-  card.addEventListener('mouseleave', () => { card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateZ(0)'; });
-});
-
-// ── HERO PARALLAX ──
-document.addEventListener('mousemove', e => {
-  const x = (e.clientX / window.innerWidth - 0.5) * 20;
-  const y = (e.clientY / window.innerHeight - 0.5) * 20;
-  const profileWrap = document.querySelector('.hero-visual');
-  if (profileWrap) profileWrap.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
-});
-
-// ── CANVAS STARFIELD ──
-(function() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, stars = [], particles = [], mx = 0, my = 0;
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-
-  function initStars() {
-    stars = [];
-    for (let i = 0; i < 200; i++) {
-      stars.push({
-        x: Math.random() * W, y: Math.random() * H,
-        r: Math.random() * 1.5 + 0.2,
-        speed: Math.random() * 0.3 + 0.05,
-        alpha: Math.random() * 0.6 + 0.2,
-        twinkle: Math.random() * Math.PI * 2
-      });
+        this.vx = Math.random() * 0.45 - 0.225;
+        this.vy = Math.random() * 0.45 - 0.225;
     }
-  }
 
-  function initParticles() {
-    particles = [];
-    for (let i = 0; i < 50; i++) {
-      particles.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 2 + 0.5,
-        color: ['#00D4FF','#8B5CF6','#00FFB2'][Math.floor(Math.random()*3)],
-        alpha: Math.random() * 0.4 + 0.1
-      });
-    }
-  }
+    update() {
 
-  let frame = 0;
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
+        this.x += this.vx;
+        this.y += this.vy;
 
-    // Nebula glows
-    const nebulas = [
-      { x: W*0.15, y: H*0.2, r: 300, c: '0,212,255' },
-      { x: W*0.85, y: H*0.7, r: 280, c: '139,92,246' },
-      { x: W*0.5, y: H*0.85, r: 220, c: '0,255,178' },
-    ];
-    nebulas.forEach(n => {
-      const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
-      g.addColorStop(0, `rgba(${n.c},0.04)`);
-      g.addColorStop(1, `rgba(${n.c},0)`);
-      ctx.fillStyle = g; ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); ctx.fill();
-    });
-
-    // Stars
-    frame++;
-    stars.forEach(s => {
-      s.twinkle += 0.02;
-      const alpha = s.alpha * (0.7 + 0.3 * Math.sin(s.twinkle));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fill();
-      s.y += s.speed;
-      if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
-    });
-
-    // Floating particles
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color + Math.round(p.alpha * 255).toString(16).padStart(2,'0');
-      ctx.fill();
-    });
-
-    // Connect nearby particles
-    particles.forEach((a, i) => {
-      particles.slice(i+1).forEach(b => {
-        const d = Math.hypot(a.x-b.x, a.y-b.y);
-        if (d < 120) {
-          ctx.beginPath();
-          ctx.strokeStyle = `rgba(0,212,255,${0.08 * (1-d/120)})`;
-          ctx.lineWidth = .5;
-          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-          ctx.stroke();
+        // Bounce from edges
+        if (this.x < 0 || this.x > canvas.width) {
+            this.vx *= -1;
         }
-      });
+
+        if (this.y < 0 || this.y > canvas.height) {
+            this.vy *= -1;
+        }
+
+        // Mouse interaction
+        if (mouse.x !== null) {
+
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+
+            const distance = Math.hypot(dx, dy);
+
+            if (distance < 140) {
+
+                this.vx += dx / 18000;
+                this.vy += dy / 18000;
+
+            }
+        }
+    }
+
+    draw() {
+
+        ctx.fillStyle = "rgba(102, 227, 180, 0.65)";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            this.x,
+            this.y,
+            this.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+}
+
+
+// Create particles
+function initParticles() {
+
+    particles = [];
+
+    const count = Math.min(
+        95,
+        Math.floor(
+            canvas.width * canvas.height / 15000
+        )
+    );
+
+    for (let i = 0; i < count; i++) {
+
+        particles.push(
+            new Particle()
+        );
+
+    }
+}
+
+
+// Connect nearby particles
+function connectParticles() {
+
+    for (let i = 0; i < particles.length; i++) {
+
+        for (let j = i + 1; j < particles.length; j++) {
+
+            const distance = Math.hypot(
+                particles[i].x - particles[j].x,
+                particles[i].y - particles[j].y
+            );
+
+            if (distance < 105) {
+
+                ctx.strokeStyle =
+                    `rgba(102, 227, 180, ${0.16 * (1 - distance / 105)})`;
+
+                ctx.lineWidth = 0.6;
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    particles[i].x,
+                    particles[i].y
+                );
+
+                ctx.lineTo(
+                    particles[j].x,
+                    particles[j].y
+                );
+
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+
+// Animate particles
+function animateParticles() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    particles.forEach(particle => {
+
+        particle.update();
+        particle.draw();
+
     });
 
-    // Mouse glow
-    const mg = ctx.createRadialGradient(mx, my, 0, mx, my, 160);
-    mg.addColorStop(0, 'rgba(0,212,255,0.04)');
-    mg.addColorStop(1, 'rgba(0,212,255,0)');
-    ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+    connectParticles();
 
-    requestAnimationFrame(draw);
-  }
+    requestAnimationFrame(
+        animateParticles
+    );
+}
 
-  window.addEventListener('resize', () => { resize(); initStars(); initParticles(); });
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-  resize(); initStars(); initParticles(); draw();
-})();
 
-// ── PARTICLE EXPLOSION ON BUTTON CLICK ──
-document.querySelectorAll('.btn, .btn-sm').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    const rect = this.getBoundingClientRect();
-    const cx = rect.left + rect.width/2;
-    const cy = rect.top + rect.height/2;
-    for (let i = 0; i < 12; i++) {
-      const el = document.createElement('div');
-      el.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:99999;background:${['#00D4FF','#8B5CF6','#00FFB2'][i%3]};`;
-      document.body.appendChild(el);
-      const angle = (i / 12) * Math.PI * 2;
-      const dist = 60 + Math.random() * 40;
-      const tx = Math.cos(angle) * dist;
-      const ty = Math.sin(angle) * dist;
-      el.animate([
-        { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
-        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0)`, opacity: 0 }
-      ], { duration: 600, easing: 'cubic-bezier(0,1,.5,1)' }).onfinish = () => el.remove();
+// Mouse movement
+window.addEventListener(
+    "mousemove",
+    event => {
+
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+
     }
-  });
-});
+);
 
-// ── FORM SUBMIT ──
-function handleFormSubmit(e) {
-  e.preventDefault();
-  const btn = e.target;
-  btn.textContent = '⏳ Sending...';
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = '✅ Sent!';
-    document.getElementById('formSuccess').style.display = 'block';
-    document.getElementById('fname').value = '';
-    document.getElementById('femail').value = '';
-    document.getElementById('fsubject').value = '';
-    document.getElementById('fmessage').value = '';
-    setTimeout(() => {
-      btn.textContent = '🚀 Send Message';
-      btn.disabled = false;
-      document.getElementById('formSuccess').style.display = 'none';
-    }, 3000);
-  }, 1500);
+
+// Mouse leave
+window.addEventListener(
+    "mouseleave",
+    () => {
+
+        mouse.x = null;
+        mouse.y = null;
+
+    }
+);
+
+
+// Resize
+window.addEventListener(
+    "resize",
+    () => {
+
+        resizeCanvas();
+        initParticles();
+
+    }
+);
+
+
+
+// ==========================================
+// TYPING ANIMATION
+// ==========================================
+
+const texts = [
+    "Software Engineering Student",
+    "Aspiring Web Developer",
+    "Frontend Developer",
+    "UI Enthusiast",
+    "Always Learning"
+];
+
+let textIndex = 0;
+let charIndex = 0;
+let deleting = false;
+
+const typingElement =
+    document.getElementById("typing-text");
+
+
+function type() {
+
+    const text = texts[textIndex];
+
+    typingElement.textContent =
+        deleting
+            ? text.slice(0, charIndex - 1)
+            : text.slice(0, charIndex + 1);
+
+    charIndex += deleting ? -1 : 1;
+
+
+    // Finished typing
+    if (
+        !deleting &&
+        charIndex === text.length
+    ) {
+
+        deleting = true;
+
+        setTimeout(
+            type,
+            1300
+        );
+
+        return;
+    }
+
+
+    // Finished deleting
+    if (
+        deleting &&
+        charIndex === 0
+    ) {
+
+        deleting = false;
+
+        textIndex =
+            (textIndex + 1) % texts.length;
+
+        setTimeout(
+            type,
+            400
+        );
+
+        return;
+    }
+
+
+    setTimeout(
+        type,
+        deleting ? 38 : 72
+    );
 }
 
-// ── CV DOWNLOAD ──
-function downloadCV(e) {
-  e.preventDefault();
-  const btn = e.currentTarget;
-  btn.textContent = '⏳ Preparing...';
-  setTimeout(() => {
-    btn.innerHTML = '📄 Download CV';
-    alert('📄 CV download will be available once you link your actual CV file to this button!');
-  }, 1000);
+
+
+// ==========================================
+// PROJECT DATA
+// ==========================================
+
+const projects = [
+
+    {
+        title: "Personal Portfolio",
+
+        number: "01 / PROJECT",
+
+        image: "RD.",
+
+        description:
+            "A modern responsive portfolio focused on clean UI, smooth animations, responsive layouts and interactive project details.",
+
+        tech: [
+            "Tailwind CSS",
+            "JavaScript",
+            "Responsive UI"
+        ],
+
+        liveLink: "index.html"
+    },
+
+
+    {
+        title: "Task Manager",
+
+        number: "02 / PROJECT",
+
+        image: "✓",
+
+        description:
+            "A simple task management interface with add, edit, delete and local storage functionality.",
+
+        tech: [
+            "JavaScript",
+            "Tailwind CSS",
+            "localStorage"
+        ],
+
+        liveLink: "#"
+    },
+
+
+    {
+        title: "Fashion Store",
+
+        number: "03 / PROJECT",
+
+        image: "🛒",
+
+        description:
+            "A clean e-commerce landing page designed around product presentation, spacing and responsive layouts.",
+
+        tech: [
+            "Tailwind CSS",
+            "UI Design"
+        ],
+
+        liveLink: "#"
+    }
+
+];
+
+
+
+// ==========================================
+// PROJECT MODAL
+// ==========================================
+
+function showProjectModal(index) {
+
+    const project = projects[index];
+
+    document.getElementById(
+        "modal-number"
+    ).textContent = project.number;
+
+
+    document.getElementById(
+        "modal-image"
+    ).textContent = project.image;
+
+
+    document.getElementById(
+        "modal-title"
+    ).textContent = project.title;
+
+
+    document.getElementById(
+        "modal-description"
+    ).textContent = project.description;
+
+
+    document.getElementById(
+        "modal-tech"
+    ).innerHTML =
+        project.tech
+            .map(
+                tech => `<span>${tech}</span>`
+            )
+            .join("");
+
+
+    document.getElementById(
+        "modal-live-link"
+    ).href = project.liveLink;
+
+
+    document.getElementById(
+        "project-modal"
+    ).classList.remove("hidden");
 }
 
-// ── NAV SCROLL EFFECT ──
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('navbar');
-  nav.style.background = window.scrollY > 50 ? 'rgba(5,8,22,0.95)' : 'rgba(5,8,22,0.7)';
-});
+
+
+// Close modal
+function closeModal() {
+
+    document
+        .getElementById("project-modal")
+        .classList.add("hidden");
+
+}
+
+
+// Close modal when clicking outside
+document
+    .getElementById("project-modal")
+    .addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target.id ===
+                "project-modal"
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+
+// Close modal with ESC
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Escape") {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+
+// ==========================================
+// MOBILE MENU
+// ==========================================
+
+const mobileBtn =
+    document.getElementById(
+        "mobile-menu-btn"
+    );
+
+const mobileMenu =
+    document.getElementById(
+        "mobile-menu"
+    );
+
+
+mobileBtn.addEventListener(
+    "click",
+    () => {
+
+        mobileMenu.classList.toggle(
+            "hidden"
+        );
+
+    }
+);
+
+
+
+// ==========================================
+// DARK / LIGHT THEME
+// ==========================================
+
+const themeToggle =
+    document.getElementById(
+        "theme-toggle"
+    );
+
+const html =
+    document.documentElement;
+
+
+
+function updateThemeIcon() {
+
+    themeToggle.innerHTML =
+        html.classList.contains("light")
+
+            ? '<i class="fa-solid fa-moon"></i>'
+
+            : '<i class="fa-solid fa-sun"></i>';
+
+}
+
+
+
+function applyTheme(theme) {
+
+    html.classList.toggle(
+        "light",
+        theme === "light"
+    );
+
+    html.classList.toggle(
+        "dark",
+        theme !== "light"
+    );
+
+    localStorage.setItem(
+        "theme",
+        theme
+    );
+
+    updateThemeIcon();
+
+}
+
+
+
+function initTheme() {
+
+    const savedTheme =
+        localStorage.getItem(
+            "theme"
+        );
+
+    applyTheme(
+        savedTheme || "dark"
+    );
+
+}
+
+
+
+themeToggle.addEventListener(
+    "click",
+    () => {
+
+        applyTheme(
+            html.classList.contains("light")
+                ? "dark"
+                : "light"
+        );
+
+    }
+);
+
+
+
+// ==========================================
+// SMOOTH SCROLL
+// ==========================================
+
+document
+    .querySelectorAll(
+        'a[href^="#"]'
+    )
+    .forEach(link => {
+
+        link.addEventListener(
+            "click",
+            event => {
+
+                const target =
+                    document.querySelector(
+                        link.getAttribute("href")
+                    );
+
+                if (target) {
+
+                    event.preventDefault();
+
+                    target.scrollIntoView({
+                        behavior: "smooth"
+                    });
+
+                    mobileMenu.classList.add(
+                        "hidden"
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+
+
+// ==========================================
+// CONTACT FORM - WEB3FORMS
+// ==========================================
+
+const form =
+    document.getElementById(
+        "contact-form"
+    );
+
+
+form.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        const button =
+            document.getElementById(
+                "submit-btn"
+            );
+
+        const submitText =
+            document.getElementById(
+                "submit-text"
+            );
+
+
+        button.disabled = true;
+
+        submitText.textContent =
+            "Sending...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "https://api.web3forms.com/submit",
+                    {
+                        method: "POST",
+                        body: new FormData(form)
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                alert(
+                    "Message sent successfully! I will get back to you soon."
+                );
+
+                form.reset();
+
+            } else {
+
+                alert(
+                    "Could not send the message. Please try again."
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Network error. Please check your connection and try again."
+            );
+
+        } finally {
+
+            button.disabled = false;
+
+            submitText.textContent =
+                "Send Message";
+
+        }
+
+    }
+);
+
+
+
+// ==========================================
+// CURRENT YEAR
+// ==========================================
+
+document.getElementById(
+    "year"
+).textContent =
+    new Date().getFullYear();
+
+
+
+// ==========================================
+// PAGE LOAD
+// ==========================================
+
+window.addEventListener(
+    "load",
+    () => {
+
+        initTheme();
+
+        resizeCanvas();
+
+        initParticles();
+
+        animateParticles();
+
+        setTimeout(
+            type,
+            700
+        );
+
+    }
+);
